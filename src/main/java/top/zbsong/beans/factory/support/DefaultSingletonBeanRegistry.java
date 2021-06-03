@@ -16,12 +16,13 @@ public class DefaultSingletonBeanRegistry implements SingletonBeanRegistry {
 
     @Override
     public Object getSingleton(String beanName) {
-        return null;
+        return singletonObjects.get(beanName);
     }
 
     /**
      * 注册bean对象
      * protected修饰，此方法可以被继承此类的其它类调用，如AbstractBeanFactory以及DefaultListableBeanFactory 调用。
+     *
      * @param beanName
      * @param singletonObject
      */
