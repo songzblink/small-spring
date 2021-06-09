@@ -12,12 +12,10 @@ import top.zbsong.beans.factory.config.BeanDefinition;
  */
 public abstract class AbstractBeanFactory extends DefaultSingletonBeanRegistry implements BeanFactory {
 
-    @Override
     public Object getBean(String beanName) throws BeansException {
         return doGetBean(beanName, null);
     }
 
-    @Override
     public Object getBean(String beanName, Object... args) throws BeansException {
         return doGetBean(beanName, args);
     }

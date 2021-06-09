@@ -122,3 +122,34 @@ java.lang.InstantiationException: bean.UserService
 完善了实例化操作，增加了 InstantiationStrategy 实例化策略接口，新增了两个实例化类。
 
 从不断地完善增加需求可以看到，到代码结构设计的较为合理时，就可以非常容易方便地进行扩展不同属性地类职责，而不会因为需求地增加导致类结构混乱。所以在我们自己业务需求实现的过程中，也要尽可能的去考虑一个良好的扩展性以及拆分好类的职责。
+
+## 4.为Bean对象注入属性和依赖Bean的功能实现
+
+### 目标
+
+回顾前面几节，我们完成了：实现一个容器、定义和注册 Bean、实例化 Bean、按照是否包含有参构造函数实现不同的实例化策略。此时还缺少一个关于“类中是否有属性”的问题，如果类中包含属性那么在实例化的时候就需要把属性信息填充上，这样才是一个完整的对象创建。
+
+对于属性的填充不只是 Int、Long、String，还包括还没有实例化的对象属性，都需要在 Bean 创建时进行填充操作。因为目前是学习，我们暂时不考虑 Bean 的循环依赖，否则会把整个功能实现撑大，等以后逐步完善。
+
+### 设计
+
+鉴于属性填充是在 Bean 使用 newInstance 或 Cglib 创建后，开始补全属性信息，那么就可以在类 AbstractAutowireCapableBeanFactory 的 `createBean()` 方法中添加补全属性方法。
+
+![](https://bugstack.cn/assets/images/spring/spring-5-01.png)
+
+- 属性填充要在类实例化创建之后，也就是需要在 AbstractAutowireCapableBeanFactory 的 `createBean()` 方法中添加 `applyPropertyValues()` 操作。
+- 由于我们需要在创建 Bean 的时候填充属性操作，那么就需要在 Bean 定义 BeanDefinition 类中，添加 PropertyValues 信息。
+- 另外是填充属性信息还包括了 Bean 的对象类型，也就是需要再定义一个 BeanReference，里面其实就是一个简单的 Bean 名称，在具体的实例化操作时进行递归创建和填充，与 Spring 源码实现一样。*Spring 源码中 BeanReference 是一个接口*。
+
+### 代码
+
+![](https://bugstack.cn/assets/images/spring/spring-5-02.png)
+
+- 新增 3 个类，BeanReference（类引用）、PropertyValue（属性值）、PropertyValues（属性集合），分别用于类和其他类型属性填充操作。
+- 另外改动的类主要是 AbstractAutowireCapableBeanFactory，在 createBean 中补全属性填充部分。
+
+见仓库：[small-spring/small-spring-step-04: 给 Bean 对象填充属性信息 (github.com)](https://github.com/small-spring/small-spring-step-04)
+
+### 总结
+
+在本节对 AbstractAutowireCapableBeanFactory 类中创建对象的功能做了扩充，依赖于是否有构造函数的实例化策略完成后，开始补充 Bean 属性信息。当遇到 Bean 属性为 Bean 对象时，需要递归处理。最后在属性填充时需要用到反射操作，也可以使用一些工具类处理。
